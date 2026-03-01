@@ -1,0 +1,29 @@
+{
+  "product": {
+    "add_to_cart": "Add to Cart",
+    "adding": "Adding…",
+    "sold_out": "Sold Out",
+    "sale": "Sale",
+    "unavailable": "Unavailable",
+    "view_details": "View Details"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "checkout": "Checkout",
+    "continue_shopping": "Continue Shopping",
+    "subtotal": "Subtotal",
+    "item_count": "{{ count }} items"
+  },
+  "home": {
+    "tagline": "Discover our latest collection",
+    "shop_now": "Shop Now",
+    "featured_products": "Featured Products"
+  },
+  "general": {
+    "loading": "Loading…",
+    "close": "Close",
+    "search": "Search",
+    "submit": "Submit"
+  }
+}

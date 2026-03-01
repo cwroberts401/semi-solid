@@ -1,0 +1,37 @@
+{
+  "name": "semi-solid",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:compile\" \"npm run dev:shopify\"",
+    "dev:compile": "BRAND=brand-a LOCALE=en vite build --watch",
+    "dev:shopify": "shopify theme dev --path ./dist/brand-a/en --store stg-stevemadden.myshopify.com --store-password stg2020",
+    "build:all": "turbo run build",
+    "build:brand-a": "BRAND=brand-a LOCALE=en vite build && BRAND=brand-a LOCALE=fr vite build",
+    "build:brand-b": "BRAND=brand-b LOCALE=en vite build && BRAND=brand-b LOCALE=de vite build",
+    "build:brand-c": "BRAND=brand-c LOCALE=en vite build",
+    "preview": "BRAND=brand-a LOCALE=en vite build && shopify theme console --path ./dist/brand-a/en",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "storybook": "storybook dev -p 6006"
+  },
+  "dependencies": {
+    "@semi-solid/runtime": "workspace:*",
+    "@semi-solid/solid": "workspace:*",
+    "solid-js": "^1.9.0"
+  },
+  "devDependencies": {
+    "@semi-solid/compiler": "workspace:*",
+    "@tailwindcss/vite": "^4.2.1",
+    "concurrently": "^8.0.0",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0",
+    "vite-plugin-solid": "^2.10.0",
+    "vitest": "^2.0.0"
+  }
+}

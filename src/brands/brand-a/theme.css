@@ -1,0 +1,23 @@
+/**
+ * Brand A — Tailwind CSS entry point.
+ *
+ * Imports Tailwind and defines brand-specific design tokens via @theme.
+ * @source directives tell Tailwind where to scan for utility classes.
+ */
+
+@import "tailwindcss";
+
+@source "../../components/**/*.tsx";
+@source "../../routes/**/*.tsx";
+@source not "../../../dist";
+
+@theme {
+  --color-primary: #1a1a2e;
+  --color-accent: #e94560;
+  --color-surface: #ffffff;
+  --color-text: #16213e;
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Inter", sans-serif;
+  --radius-card: 4px;
+  --radius-button: 2px;
+}

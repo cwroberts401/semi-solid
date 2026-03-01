@@ -1,0 +1,29 @@
+{
+  "product": {
+    "add_to_cart": "Add to Bag",
+    "adding": "Adding…",
+    "sold_out": "Out of Stock",
+    "sale": "On Sale",
+    "unavailable": "Currently Unavailable",
+    "view_details": "View Product"
+  },
+  "cart": {
+    "title": "Shopping Bag",
+    "empty": "Your bag is empty",
+    "checkout": "Proceed to Checkout",
+    "continue_shopping": "Keep Shopping",
+    "subtotal": "Order Total",
+    "item_count": "{{ count }} items"
+  },
+  "home": {
+    "tagline": "Shop the new season",
+    "shop_now": "Shop Collection",
+    "featured_products": "New Arrivals"
+  },
+  "general": {
+    "loading": "Loading…",
+    "close": "Close",
+    "search": "Search",
+    "submit": "Submit"
+  }
+}

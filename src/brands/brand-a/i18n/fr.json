@@ -1,0 +1,29 @@
+{
+  "product": {
+    "add_to_cart": "Ajouter au panier",
+    "adding": "Ajout en cours…",
+    "sold_out": "Épuisé",
+    "sale": "Soldes",
+    "unavailable": "Indisponible",
+    "view_details": "Voir les détails"
+  },
+  "cart": {
+    "title": "Votre panier",
+    "empty": "Votre panier est vide",
+    "checkout": "Commander",
+    "continue_shopping": "Continuer les achats",
+    "subtotal": "Sous-total",
+    "item_count": "{{ count }} articles"
+  },
+  "home": {
+    "tagline": "Découvrez notre dernière collection",
+    "shop_now": "Acheter maintenant",
+    "featured_products": "Produits vedettes"
+  },
+  "general": {
+    "loading": "Chargement…",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "submit": "Envoyer"
+  }
+}

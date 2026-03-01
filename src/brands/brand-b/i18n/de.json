@@ -1,0 +1,29 @@
+{
+  "product": {
+    "add_to_cart": "In den Warenkorb",
+    "adding": "Wird hinzugefügt…",
+    "sold_out": "Ausverkauft",
+    "sale": "Sale",
+    "unavailable": "Nicht verfügbar",
+    "view_details": "Produkt ansehen"
+  },
+  "cart": {
+    "title": "Warenkorb",
+    "empty": "Ihr Warenkorb ist leer",
+    "checkout": "Zur Kasse",
+    "continue_shopping": "Weiter einkaufen",
+    "subtotal": "Zwischensumme",
+    "item_count": "{{ count }} Artikel"
+  },
+  "home": {
+    "tagline": "Entdecken Sie unsere neue Kollektion",
+    "shop_now": "Jetzt einkaufen",
+    "featured_products": "Ausgewählte Produkte"
+  },
+  "general": {
+    "loading": "Laden…",
+    "close": "Schließen",
+    "search": "Suchen",
+    "submit": "Absenden"
+  }
+}

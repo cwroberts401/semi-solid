@@ -1,0 +1,9 @@
+/**
+ * Global custom styles — supplement to Tailwind.
+ *
+ * Tailwind base/preflight is imported via the brand CSS entry point
+ * (src/brands/{brand}/theme.css). Add project-wide custom CSS here only
+ * for things that Tailwind utilities don't cover.
+ */
+
+/* Add global overrides here as needed */
