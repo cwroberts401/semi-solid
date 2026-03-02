@@ -386,6 +386,56 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
         );
       }
 
+      // Process section files that were identified in buildStart but never hit
+      // the transform hook. This happens because section components are standalone
+      // Shopify sections referenced by JSON templates — they are not JS-imported
+      // by any route or entry point, so Vite never includes them in the module
+      // graph. We compile them here as a fallback.
+      for (const sectionName of sectionComponentNames) {
+        const kebab = toKebabCase(sectionName);
+        const expectedFile = `sections/${kebab}.liquid`;
+        if (generatedSections.includes(expectedFile)) continue; // already processed in transform
+
+        // Locate the source file (check brand override first, then base)
+        const brandPath = path.join(projectRoot, 'src', 'brands', brand, 'sections', `${sectionName}.tsx`);
+        const basePath = path.join(projectRoot, 'src', 'sections', `${sectionName}.tsx`);
+        const srcPath = fs.existsSync(brandPath) ? brandPath : basePath;
+        if (!fs.existsSync(srcPath)) {
+          this.warn(`semi-solid: section source not found for ${sectionName}`);
+          continue;
+        }
+
+        try {
+          const source = fs.readFileSync(srcPath, 'utf-8');
+          const { mappings } = extractTapMappings(source, srcPath);
+
+          const liquidWarnings: string[] = [];
+          let liquidContent = generateLiquid(source, mappings, {
+            componentName: sectionName,
+            sectionComponents: sectionComponentNames,
+            warnings: liquidWarnings,
+          });
+          for (const w of liquidWarnings) {
+            this.warn(`semi-solid: ${sectionName}: ${w}`);
+          }
+
+          const schema = extractSectionSchema(source);
+          if (schema !== null) {
+            liquidContent += '\n' + formatSchemaTag(schema);
+          }
+
+          const sectionsDir = path.join(resolvedOutDir, 'sections');
+          fs.mkdirSync(sectionsDir, { recursive: true });
+          writeIfChanged(path.join(sectionsDir, `${kebab}.liquid`), liquidContent);
+          generatedSections.push(expectedFile);
+          this.info(`semi-solid: wrote ${expectedFile} (section, closeBundle fallback)`);
+        } catch (err) {
+          this.warn(
+            `semi-solid: failed to compile section ${sectionName}: ${(err as Error).message}`,
+          );
+        }
+      }
+
       // Phase 7: write required Shopify theme files if they are absent.
       // These files cannot be deleted from a live theme, so the Shopify CLI
       // will error when syncing if they exist on the remote but not locally.
@@ -518,17 +568,22 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
           this.warn(`semi-solid: ${warn.message}`);
         }
 
+        const liquidWarnings: string[] = [];
         let liquidContent: string;
         try {
           liquidContent = generateLiquid(code, mappings, {
             componentName,
             sectionComponents: sectionComponentNames,
+            warnings: liquidWarnings,
           });
         } catch (err) {
           this.warn(
             `semi-solid: failed to generate liquid for ${id}: ${(err as Error).message}`,
           );
           return { code: cleanedSource, map: sourceMap };
+        }
+        for (const w of liquidWarnings) {
+          this.warn(`semi-solid: ${componentName}: ${w}`);
         }
 
         // Warn on tap() variables that never made it into the liquid output
@@ -632,6 +687,7 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
 
       const liquidFileName = kebabName + '.liquid';
 
+      const liquidWarnings2: string[] = [];
       let liquidContent: string;
       try {
         liquidContent = generateLiquid(code, mappings, {
@@ -639,12 +695,16 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
           dataProps,
           dataSectionId,
           sectionComponents: sectionComponentNames,
+          warnings: liquidWarnings2,
         });
       } catch (err) {
         this.warn(
           `semi-solid: failed to generate liquid for ${id}: ${(err as Error).message}`,
         );
         return { code: cleanedSource, map: sourceMap };
+      }
+      for (const w of liquidWarnings2) {
+        this.warn(`semi-solid: ${componentName}: ${w}`);
       }
 
       // Phase 7: warn on tap() variables that never made it into the liquid output

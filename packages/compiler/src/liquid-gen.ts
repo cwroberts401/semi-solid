@@ -36,7 +36,28 @@ import {
   resolveForIteration,
   resolveMemberPath,
   stripLiquidBraces,
+  hasLiquidFilters,
 } from './control-flow.js';
+
+// ---------------------------------------------------------------------------
+// Client-only framework components that have no Liquid equivalent.
+//
+// Transparent: render children through to the Liquid output (animation
+// wrappers, context providers, etc.).
+// Opaque: skip entirely — their content is purely client-side (portals,
+// suspense boundaries, error boundaries).
+// ---------------------------------------------------------------------------
+const TRANSPARENT_COMPONENTS = new Set([
+  'Transition',
+  'TransitionGroup',
+  'ErrorBoundary',
+  'Suspense',
+]);
+
+const OPAQUE_COMPONENTS = new Set([
+  'Portal',
+  'Dynamic',
+]);
 
 export interface LiquidGenOptions {
   /** Component name, e.g. 'ProductCard'. Used in error messages. */
@@ -62,6 +83,12 @@ export interface LiquidGenOptions {
    * of {% render 'component-name' %}.
    */
   sectionComponents?: Set<string>;
+  /**
+   * Mutable array that accumulates build-time warnings during Liquid generation.
+   * Callers can inspect this after generateLiquid() returns to surface warnings
+   * via the build tool (e.g. Vite/Rollup this.warn()).
+   */
+  warnings?: string[];
 }
 
 export function generateLiquid(
@@ -101,6 +128,8 @@ export function generateLiquid(
     );
   }
 
+  const warnings = options.warnings ?? [];
+
   const ctx: RenderContext = {
     mappings,
     indent: options.indent ?? '  ',
@@ -116,6 +145,7 @@ export function generateLiquid(
             applied: false,
           }
         : null,
+    warnings,
   };
 
   return renderNode(jsxRoot, ctx, 0).trim() + '\n';
@@ -147,6 +177,8 @@ interface RenderContext {
    * The object is shared by reference so `applied` is truly one-shot.
    */
   hydration: HydrationState | null;
+  /** Mutable array for accumulating build-time warnings. */
+  warnings: string[];
 }
 
 function ind(ctx: RenderContext, depth: number): string {
@@ -190,6 +222,17 @@ function renderElement(element: AstNode, ctx: RenderContext, depth: number): str
   // -------------------------------------------------------------------------
   if (tagName === 'Match') return renderMatch(element, ctx, depth);
   if (tagName === 'Case') return `<!-- <Case> must appear inside <Match> -->`;
+
+  // -------------------------------------------------------------------------
+  // Client-only framework components — no Liquid equivalent.
+  // Transparent wrappers render their children through; opaque ones are skipped.
+  // -------------------------------------------------------------------------
+  if (TRANSPARENT_COMPONENTS.has(tagName)) {
+    return renderChildren(element.children as AstNode[], ctx, depth);
+  }
+  if (OPAQUE_COMPONENTS.has(tagName)) {
+    return '';
+  }
 
   // -------------------------------------------------------------------------
   // Phase 3: custom component imports → {% render 'snippet' %}
@@ -270,7 +313,7 @@ function renderShow(element: AstNode, ctx: RenderContext, depth: number): string
     return `<!-- <Show> 'when' prop must be a JSX expression -->`;
   }
 
-  const condition = resolveShowCondition(whenExpr, ctx.mappings, ctx.loopVars);
+  const condition = resolveShowCondition(whenExpr, ctx.mappings, ctx.loopVars, ctx.warnings);
 
   if (!condition) {
     // Not tap-mapped — stays client-side; the JS bundle handles it
@@ -384,7 +427,7 @@ function renderFor(element: AstNode, ctx: RenderContext, depth: number): string 
 
   const loopVarName = (params[0] as AstNode & { name: string }).name;
 
-  const iteration = resolveForIteration(eachExpr, loopVarName, ctx.mappings, ctx.loopVars);
+  const iteration = resolveForIteration(eachExpr, loopVarName, ctx.mappings, ctx.loopVars, ctx.warnings);
 
   if (!iteration) {
     return `<!-- <For> collection is not Liquid-mapped — rendered client-side -->`;
@@ -459,6 +502,14 @@ function renderMatch(element: AstNode, ctx: RenderContext, depth: number): strin
     } else if (ctx.loopVars.has(varName)) {
       liquidPath = varName;
     }
+  }
+
+  if (liquidPath && liquidPath.includes('|')) {
+    ctx.warnings.push(
+      `<Match on={...}>: resolved expression '${liquidPath}' contains Liquid filters ` +
+      `which are not valid in {% case %} tag context. Falling back to client-side rendering.`,
+    );
+    liquidPath = null;
   }
 
   if (!liquidPath) {
@@ -633,8 +684,9 @@ function renderAttributes(attrs: AstNode[], ctx: RenderContext): string[] {
 
     const attrName = nameNode.name as string;
 
-    // Skip event handlers, ref, key — these are client-side
-    if (attrName.startsWith('on') || attrName === 'ref' || attrName === 'key') continue;
+    // Skip event handlers, ref, key, classList — these are client-side.
+    // classList is a SolidJS directive (not a valid HTML attribute) handled at runtime.
+    if (attrName.startsWith('on') || attrName === 'ref' || attrName === 'key' || attrName === 'classList') continue;
 
     const value = attr.value as AstNode | null;
 
@@ -650,6 +702,25 @@ function renderAttributes(attrs: AstNode[], ctx: RenderContext): string[] {
 
     if (isJSXExpressionContainer(value)) {
       const expr = value.expression as AstNode;
+
+      // Template literal class: class={`static-classes ${dynamic}`} → class="static-classes"
+      // Extracts the static quasis (literal string parts) so Liquid SSR includes
+      // the base classes, preventing layout shift when dynamic parts are added client-side.
+      if (attrName === 'class' && expr.type === 'TemplateLiteral') {
+        const quasis = expr.quasis as AstNode[];
+        const staticParts = quasis
+          .map((q) => {
+            const val = (q as AstNode & { value?: { raw?: string } }).value;
+            return (val?.raw ?? '').trim();
+          })
+          .filter((s) => s.length > 0)
+          .join(' ');
+        if (staticParts) {
+          result.push(`${attrName}="${escapeAttr(staticParts)}"`);
+        }
+        continue;
+      }
+
       const liquidExpr = exprToLiquid(expr, ctx);
       if (liquidExpr) {
         result.push(`${attrName}="${sanitiseLiquidForAttr(liquidExpr)}"`);

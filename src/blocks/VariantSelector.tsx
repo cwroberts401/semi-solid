@@ -12,7 +12,7 @@
  */
 
 import { createSignal, For, Show, onMount, onCleanup } from 'solid-js';
-import { tap } from '$lib/runtime';
+import { tap, liquidRaw } from '$lib/runtime';
 
 interface ProductOption {
   name: string;
@@ -121,9 +121,10 @@ export default function VariantSelector(props: {
               aria-haspopup="listbox"
               aria-controls={`variant-listbox-${optionIdx()}`}
             >
-              <span>{selected()[optionIdx()]}</span>
+              <span>{liquidRaw('{{ option.values.first }}')}{selected()[optionIdx()]}</span>
               <svg
-                class={`w-4 h-4 text-gray-400 transition-transform ${openIdx() === optionIdx() ? 'rotate-180' : ''}`}
+                class="w-4 h-4 text-gray-400 transition-transform"
+                classList={{ 'rotate-180': openIdx() === optionIdx() }}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"

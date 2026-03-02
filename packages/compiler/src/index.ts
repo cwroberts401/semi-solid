@@ -34,3 +34,4 @@ export type { SemiSolidOptions } from './plugin.js';
 export type { LiquidGenOptions } from './liquid-gen.js';
 export type { ShowCondition, ForIteration } from './control-flow.js';
 export type { RouteInfo } from './route-map.js';
+export type { SemiSolidConfig, BrandConfig } from './cli/config.js';

@@ -2,7 +2,10 @@
   "sections": {
     "main": {
       "type": "index-content"
+    },
+    "recently-viewed": {
+      "type": "recently-viewed"
     }
   },
-  "order": ["main"]
+  "order": ["main", "recently-viewed"]
 }

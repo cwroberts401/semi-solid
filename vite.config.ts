@@ -61,9 +61,6 @@ export default defineConfig({
       // no bare module specifiers reach the browser.
       input: {
         layout: 'src/routes/+layout.tsx',
-        index: 'src/routes/index.tsx',
-        product: 'src/routes/products/[handle].tsx',
-        collection: 'src/routes/collections/[handle].tsx',
         'theme.entry': 'virtual:semi-solid/hydration-entry',
       },
       output: {

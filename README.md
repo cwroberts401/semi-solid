@@ -63,18 +63,88 @@ Component categories mirror Shopify's file structure. The compiler writes each c
 ## Quick start
 
 ```bash
-# Install
-bun install
+pnpm install
 
 # Dev — compile + Shopify theme preview
-bun run dev
+pnpm dev
 
-# Build a brand/locale
-BRAND=brand-a LOCALE=en bun run dev:compile
+# Build a single brand/locale
+pnpm semi-solid build --brand brand-a --locale en
 
-# Run tests (402 tests)
-bun run test
+# Build all brand/locale combos
+pnpm semi-solid build-all
+
+# Run tests
+pnpm test
 ```
+
+## CLI
+
+All build commands go through the `semi-solid` CLI (provided by `@semi-solid/compiler`).
+
+### `semi-solid build`
+
+Build a single brand/locale combination. Sets `BRAND`/`LOCALE` env vars and calls Vite's programmatic `build()`, which auto-loads `vite.config.ts`.
+
+```bash
+pnpm semi-solid build --brand brand-a --locale en
+```
+
+Output goes to `dist/{brand}/{locale}/`.
+
+### `semi-solid build-all`
+
+Build every brand/locale pair defined in `semi-solid.config.ts`. Runs sequentially by default.
+
+```bash
+pnpm semi-solid build-all
+pnpm semi-solid build-all --parallel --concurrency 4
+```
+
+### `semi-solid dev`
+
+Start a Vite watch build and Shopify theme dev server together. Store URL and password come from `semi-solid.config.ts`.
+
+```bash
+pnpm semi-solid dev --brand brand-a --locale en
+pnpm semi-solid dev --brand brand-a --locale en --store my-store.myshopify.com
+pnpm semi-solid dev --brand brand-a --locale en --no-shopify   # watch only
+```
+
+### `semi-solid backfill`
+
+Regenerate specific outputs without a full Vite build.
+
+```bash
+pnpm semi-solid backfill --brand brand-a --locale en --target locales,templates,scaffold
+```
+
+| Target | What it does |
+|--------|-------------|
+| `locales` | Copy `src/brands/{brand}/i18n/*.json` to `dist/{brand}/{locale}/locales/` |
+| `templates` | Copy `src/templates/*.json` (with brand overrides) to `dist/templates/` |
+| `scaffold` | Write required Shopify files (`config/`, `layout/theme.liquid`, `gift_card.liquid`) |
+
+### Configuration
+
+The brand/locale matrix lives in `semi-solid.config.ts` at the project root:
+
+```ts
+import type { SemiSolidConfig } from '@semi-solid/compiler/cli/config';
+
+export default {
+  brands: {
+    'brand-a': {
+      locales: ['en', 'fr'],
+      store: 'my-store.myshopify.com',
+      storePassword: 'password',
+    },
+    'brand-b': { locales: ['en', 'de'] },
+  },
+} satisfies SemiSolidConfig;
+```
+
+If no config file exists, brands and locales are auto-discovered from `src/brands/*/i18n/*.json`.
 
 ## Core API
 
@@ -214,9 +284,9 @@ The brand resolver checks `src/brands/{brand}/snippets/` first, falling back to 
 Build a specific brand and locale:
 
 ```bash
-BRAND=brand-a LOCALE=en bun run dev:compile
-BRAND=brand-a LOCALE=fr bun run dev:compile
-BRAND=brand-b LOCALE=en bun run dev:compile
+pnpm semi-solid build --brand brand-a --locale en
+pnpm semi-solid build --brand brand-a --locale fr
+pnpm semi-solid build --brand brand-b --locale en
 ```
 
 Each combination outputs a complete Shopify theme to `dist/{brand}/{locale}/`.
@@ -279,9 +349,11 @@ dist/brand-a/en/
 ## Development
 
 ```bash
-bun install          # Install dependencies
-bun run test         # Run all tests
-bun run test:watch   # Watch mode
-bun run dev          # Compile + Shopify theme preview
-bun run storybook    # Component development
+pnpm install                    # Install dependencies
+pnpm test                       # Run all tests
+pnpm test:watch                 # Watch mode
+pnpm dev                        # Compile + Shopify theme preview
+pnpm dev:watch                  # Watch only (no Shopify CLI)
+pnpm build:all                  # Build all brand/locale combos
+pnpm storybook                  # Component development
 ```

@@ -6,8 +6,9 @@
  * Resolves brand-specific and global CSS entry points, and generates
  * the Liquid asset include tags needed in layout/theme.liquid.
  *
- * Shopify theme CSS lives in assets/ and is referenced via Liquid filters:
- *   {{ 'theme.css' | asset_url | stylesheet_tag }}
+ * Shopify theme CSS lives in assets/ and is referenced via a direct <link> tag
+ * (not stylesheet_tag, which defers loading and causes FOUC):
+ *   <link rel="stylesheet" href="{{ 'theme.css' | asset_url }}" media="all">
  *
  * JS assets use the modern module pattern (script_tag is deprecated):
  *   <script src="{{ 'theme.entry.js' | asset_url }}" type="module"></script>
@@ -63,12 +64,18 @@ export function resolveCSSFiles(
 }
 
 /**
- * Generates a Shopify Liquid stylesheet_tag for a CSS asset.
+ * Generates a render-blocking CSS include for a Shopify theme asset.
  *
- * Output: {{ 'theme.css' | asset_url | stylesheet_tag }}
+ * Uses a direct <link> tag instead of the `| stylesheet_tag` Liquid filter.
+ * Shopify's stylesheet_tag defers loading with media="print" + onload swap,
+ * which causes a flash of unstyled content (FOUC) and layout shift.
+ * A plain <link rel="stylesheet"> is render-blocking by default, ensuring
+ * styles are applied before the first paint.
+ *
+ * Output: <link rel="stylesheet" href="{{ 'theme.css' | asset_url }}" media="all">
  */
 export function generateStylesheetTag(assetName: string): string {
-  return `{{ '${assetName}' | asset_url | stylesheet_tag }}`;
+  return `<link rel="stylesheet" href="{{ '${assetName}' | asset_url }}" media="all">`;
 }
 
 /**

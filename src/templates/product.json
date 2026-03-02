@@ -2,7 +2,10 @@
   "sections": {
     "main": {
       "type": "product-section"
+    },
+    "recently-viewed": {
+      "type": "recently-viewed"
     }
   },
-  "order": ["main"]
+  "order": ["main", "recently-viewed"]
 }

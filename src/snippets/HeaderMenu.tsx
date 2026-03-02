@@ -26,7 +26,7 @@ interface NavLink {
 }
 
 export default function HeaderMenu(props: { links?: NavLink[] }) {
-  const links = tap('linklists.main-menu.links', props.links ?? []);
+  const links = tap('{{ linklists.main-menu.links }}', props.links ?? []);
   const [mobileOpen, setMobileOpen] = createSignal(false);
 
   return (

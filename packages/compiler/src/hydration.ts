@@ -121,6 +121,9 @@ export function detectPropVars(source: string, mappings: TapMapping): string[] {
  * Each tap-mapped prop is serialized with the | json Liquid filter so
  * the server-rendered value is available to the client JS bundle.
  *
+ * Some Shopify objects (e.g. linklist links) don't support | json, so
+ * we detect those patterns and generate manual Liquid serialization.
+ *
  * Example output for propVars = ['handle']:
  *   { "handle": {{ product.handle | json }} }
  */
@@ -130,10 +133,40 @@ export function generateDataProps(propVars: string[], mappings: TapMapping): str
   const entries = propVars.map((varName) => {
     const liquidExpr = mappings[varName];
     const bare = stripLiquidBraces(liquidExpr);
-    return `"${varName}": {{ ${bare} | json }}`;
+    return `"${varName}": ${serializeLiquidValue(bare)}`;
   });
 
   return `{ ${entries.join(', ')} }`;
+}
+
+/**
+ * Serializes a Liquid expression for safe embedding in JSON (data-props / data sections).
+ *
+ * Most Shopify objects support the | json filter, but some (notably linklist
+ * link objects) don't — they produce {"error":"json not allowed for this object"}.
+ *
+ * For known non-serializable patterns, this generates manual Liquid serialization
+ * using loops over the object's individual properties (which DO support | json).
+ */
+function serializeLiquidValue(bare: string): string {
+  // linklists.*.links — Shopify link objects don't support | json.
+  // Manually serialize each link's title, url, and child links (2 levels deep).
+  if (/^linklists\.\S+\.links$/.test(bare)) {
+    return [
+      `[{% for _l in ${bare} %}`,
+      `{% unless forloop.first %},{% endunless %}`,
+      `{"title":{{ _l.title | json }},`,
+      `"url":{{ _l.url | json }},`,
+      `"links":[{% for _c in _l.links %}`,
+      `{% unless forloop.first %},{% endunless %}`,
+      `{"title":{{ _c.title | json }},"url":{{ _c.url | json }}}`,
+      `{% endfor %}]}`,
+      `{% endfor %}]`,
+    ].join('');
+  }
+
+  // Default: use | json (works for products, collections, strings, numbers, etc.)
+  return `{{ ${bare} | json }}`;
 }
 
 /**
@@ -160,7 +193,7 @@ export function generateDataSection(propVars: string[], mappings: TapMapping): s
   const entries = propVars.map((varName) => {
     const liquidExpr = mappings[varName];
     const bare = stripLiquidBraces(liquidExpr);
-    return `  "${varName}": {{ ${bare} | json }}`;
+    return `  "${varName}": ${serializeLiquidValue(bare)}`;
   });
 
   return [

@@ -53,11 +53,21 @@ export function resolveShowCondition(
   whenExpr: AstNode,
   mappings: TapMapping,
   loopVars: Set<string>,
+  warnings?: string[],
 ): ShowCondition | null {
   // Simple identifier: when={available}
   if (isIdentifier(whenExpr)) {
     const liquidStr = mappings[whenExpr.name];
     if (liquidStr) {
+      if (hasLiquidFilters(liquidStr)) {
+        warnings?.push(
+          `<Show when={${whenExpr.name}}>: tap() expression '${liquidStr}' contains Liquid ` +
+          `filters which are not valid in {% if %} tag context. Use a separate tap() without ` +
+          `filters for conditions (e.g. tap('{{ product.available }}', false)). ` +
+          `Falling back to client-side rendering.`,
+        );
+        return null;
+      }
       return { liquidExpr: stripLiquidBraces(liquidStr), negated: false };
     }
     if (loopVars.has(whenExpr.name)) {
@@ -68,13 +78,20 @@ export function resolveShowCondition(
 
   // Negated: when={!expr}  — recursively resolve the operand and flip negated
   if (isUnaryExpression(whenExpr) && whenExpr.operator === '!') {
-    const inner = resolveShowCondition(whenExpr.argument, mappings, loopVars);
+    const inner = resolveShowCondition(whenExpr.argument, mappings, loopVars, warnings);
     if (inner) return { liquidExpr: inner.liquidExpr, negated: !inner.negated };
     return null;
   }
 
   // Member expression: when={item.available} (loop variable property access)
   const memberPath = resolveMemberPath(whenExpr, mappings, loopVars);
+  if (memberPath && memberPath.includes('|')) {
+    warnings?.push(
+      `<Show when={...}>: resolved expression '${memberPath}' contains Liquid filters ` +
+      `which are not valid in {% if %} tag context. Falling back to client-side rendering.`,
+    );
+    return null;
+  }
   if (memberPath) return { liquidExpr: memberPath, negated: false };
 
   return null;
@@ -95,11 +112,20 @@ export function resolveForIteration(
   loopVarName: string,
   mappings: TapMapping,
   loopVars: Set<string> = new Set(),
+  warnings?: string[],
 ): ForIteration | null {
   // Simple tap-mapped identifier: each={images}
   if (isIdentifier(eachExpr)) {
     const liquidStr = mappings[eachExpr.name];
     if (!liquidStr) return null;
+    if (hasLiquidFilters(liquidStr)) {
+      warnings?.push(
+        `<For each={${eachExpr.name}}>: tap() expression '${liquidStr}' contains Liquid ` +
+        `filters which are not valid in {% for %} tag context. Use a separate tap() without ` +
+        `filters for collections. Falling back to client-side rendering.`,
+      );
+      return null;
+    }
     return {
       collection: stripLiquidBraces(liquidStr),
       loopVar: loopVarName,
@@ -110,6 +136,13 @@ export function resolveForIteration(
   // Delegates to resolveMemberPath which handles nested access on loop vars.
   if (isMemberExpression(eachExpr)) {
     const memberPath = resolveMemberPath(eachExpr, mappings, loopVars);
+    if (memberPath && memberPath.includes('|')) {
+      warnings?.push(
+        `<For each={...}>: resolved expression '${memberPath}' contains Liquid filters ` +
+        `which are not valid in {% for %} tag context. Falling back to client-side rendering.`,
+      );
+      return null;
+    }
     if (memberPath) {
       return { collection: memberPath, loopVar: loopVarName };
     }
@@ -178,4 +211,18 @@ export function stripLiquidBraces(liquidStr: string): string {
     return trimmed.slice(2, -2).trim();
   }
   return trimmed;
+}
+
+/**
+ * Returns true if a Liquid expression string contains filter pipes.
+ * Filters are only valid in output context ({{ expr | filter }}), not in
+ * tag context ({% if expr %}, {% for x in expr %}).
+ *
+ * 'product.price | money'        → true
+ * 'product.available'            → false
+ * '{{ product.price | money }}'  → true  (checks after brace stripping)
+ */
+export function hasLiquidFilters(liquidStr: string): boolean {
+  const bare = stripLiquidBraces(liquidStr);
+  return bare.includes('|');
 }
