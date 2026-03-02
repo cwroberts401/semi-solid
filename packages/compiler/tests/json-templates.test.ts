@@ -10,6 +10,7 @@ const KNOWN_SECTION_TYPES = new Set([
   'product-section',
   'collection-section',
   'featured-product',
+  'recently-viewed',
 ]);
 
 describe('JSON templates', () => {

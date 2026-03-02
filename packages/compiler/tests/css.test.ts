@@ -22,15 +22,15 @@ const ROOT = '/project';
 // ---------------------------------------------------------------------------
 
 describe('generateStylesheetTag()', () => {
-  it('produces a Shopify stylesheet_tag liquid expression', () => {
+  it('produces a render-blocking link tag', () => {
     expect(generateStylesheetTag('theme.css')).toBe(
-      "{{ 'theme.css' | asset_url | stylesheet_tag }}",
+      `<link rel="stylesheet" href="{{ 'theme.css' | asset_url }}" media="all">`,
     );
   });
 
   it('uses the provided asset name verbatim', () => {
     expect(generateStylesheetTag('global-abc12345.css')).toBe(
-      "{{ 'global-abc12345.css' | asset_url | stylesheet_tag }}",
+      `<link rel="stylesheet" href="{{ 'global-abc12345.css' | asset_url }}" media="all">`,
     );
   });
 
@@ -75,7 +75,7 @@ describe('generateAssetIncludes()', () => {
 
   it('generates stylesheet tags for CSS files', () => {
     const result = generateAssetIncludes(['theme.css'], []);
-    expect(result).toContain('stylesheet_tag');
+    expect(result).toContain('<link rel="stylesheet"');
     expect(result).toContain('theme.css');
   });
 
@@ -87,7 +87,7 @@ describe('generateAssetIncludes()', () => {
 
   it('lists CSS before JS', () => {
     const result = generateAssetIncludes(['theme.css'], ['theme.entry.js']);
-    const cssPos = result.indexOf('stylesheet_tag');
+    const cssPos = result.indexOf('rel="stylesheet"');
     const jsPos = result.indexOf('theme.entry.js');
     expect(cssPos).toBeLessThan(jsPos);
   });
@@ -207,13 +207,13 @@ describe('generateAssetIncludes() with personalization', () => {
       calls: [],
     });
     const preconnectPos = result.indexOf('preconnect');
-    const cssPos = result.indexOf('stylesheet_tag');
+    const cssPos = result.indexOf('rel="stylesheet"');
     expect(preconnectPos).toBeLessThan(cssPos);
   });
 
   it('is backward compatible without personalization param', () => {
     const withoutParam = generateAssetIncludes(['theme.css'], ['theme.entry.js']);
-    expect(withoutParam).toContain('stylesheet_tag');
+    expect(withoutParam).toContain('<link rel="stylesheet"');
     expect(withoutParam).toContain('theme.entry.js');
     expect(withoutParam).not.toContain('preconnect');
   });

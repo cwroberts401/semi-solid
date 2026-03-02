@@ -7,8 +7,11 @@
 
 @import "tailwindcss";
 
-@source "../../components/**/*.tsx";
+@source "../../snippets/**/*.tsx";
+@source "../../sections/**/*.tsx";
+@source "../../blocks/**/*.tsx";
 @source "../../routes/**/*.tsx";
+@source "../../../packages/solid/src/**/*.ts";
 @source not "../../../dist";
 
 @theme {
