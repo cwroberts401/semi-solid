@@ -345,11 +345,17 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
         const lines = [
           "import { render } from 'solid-js/web';",
           "import { __setSectionId } from '$lib/tapWhen';",
+          "import { setTranslations } from '$lib/i18n';",
+          "import __translations from 'virtual:semi-solid/locale';",
           ...personalizationLines,
           ...componentNames.map((n) => {
             const category = componentCategories.get(n) ?? 'snippets';
             return `import ${n} from '$${category}/${n}';`;
           }),
+          '',
+          // Initialize translations before any component mounts so t() calls
+          // resolve to actual translated strings instead of raw key names.
+          'setTranslations(__translations);',
           '',
           // Set personalization base URL before any component mounts
           ...(options.personalization?.baseUrl
