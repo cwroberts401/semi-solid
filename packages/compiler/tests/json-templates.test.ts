@@ -7,10 +7,21 @@ const TEMPLATES_DIR = path.resolve(__dirname, '../../../src/templates');
 /** Known section component names (kebab-case) that JSON templates may reference. */
 const KNOWN_SECTION_TYPES = new Set([
   'index-content',
-  'product-section',
+  'product-image-gallery',
+  'product-details',
   'collection-section',
   'featured-product',
   'recently-viewed',
+  'not-found',
+  'article',
+  'blog',
+  'cart',
+  'collections',
+  'footer',
+  'header',
+  'page',
+  'password',
+  'search',
 ]);
 
 describe('JSON templates', () => {

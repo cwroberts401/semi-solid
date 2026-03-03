@@ -582,4 +582,88 @@ describe('generateLiquid()', () => {
       expect(output).toContain('{% endform %}');
     });
   });
+
+  describe('filter()', () => {
+    it('converts filter on loop var without args', () => {
+      const source = `
+        function Foo() {
+          const prices = tap('product.prices', []);
+          return (
+            <For each={prices}>
+              {(price) => <span>{filter(price, 'money')}</span>}
+            </For>
+          );
+        }
+      `;
+      const output = compile(source);
+      expect(output).toContain('{{ price | money }}');
+    });
+
+    it('converts filter with key-value args', () => {
+      const source = `
+        function Foo() {
+          const images = tap('product.images', []);
+          return (
+            <For each={images}>
+              {(image) => <img src={filter(image, 'image_url', { width: 800 })} />}
+            </For>
+          );
+        }
+      `;
+      const output = compile(source);
+      expect(output).toContain('{{ image | image_url: width: 800 }}');
+    });
+
+    it('converts filter with multiple args', () => {
+      const source = `
+        function Foo() {
+          const images = tap('product.images', []);
+          return (
+            <For each={images}>
+              {(image) => <img src={filter(image, 'image_url', { width: 800, crop: 'center' })} />}
+            </For>
+          );
+        }
+      `;
+      const output = compile(source);
+      expect(output).toContain("{{ image | image_url: width: 800, crop: 'center' }}");
+    });
+
+    it('converts filter on tap-mapped var', () => {
+      const source = `
+        function Foo() {
+          const price = tap('{{ product.price }}', 0);
+          return <span>{filter(price, 'money')}</span>;
+        }
+      `;
+      const output = compile(source);
+      expect(output).toContain('{{ product.price | money }}');
+    });
+
+    it('supports chaining filters', () => {
+      const source = `
+        function Foo() {
+          const price = tap('{{ product.price }}', 0);
+          return <span>{filter(filter(price, 'money'), 'strip_html')}</span>;
+        }
+      `;
+      const output = compile(source);
+      expect(output).toContain('{{ product.price | money | strip_html }}');
+    });
+
+    it('works in attribute context (HTML-safe output)', () => {
+      const source = `
+        function Foo() {
+          const images = tap('product.images', []);
+          return (
+            <For each={images}>
+              {(image) => <img src={filter(image, 'image_url', { width: 800 })} alt="product" />}
+            </For>
+          );
+        }
+      `;
+      const output = compile(source);
+      expect(output).toContain('src="{{ image | image_url: width: 800 }}"');
+    });
+  });
 });

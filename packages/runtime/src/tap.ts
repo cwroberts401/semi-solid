@@ -51,6 +51,26 @@ export function blockAttrs(): Record<string, never> {
 }
 
 /**
+ * Compile-time marker that transforms into a Liquid filter expression.
+ *
+ * At build time: the compiler converts `filter(expr, 'filterName', { key: val })`
+ * into `{{ expr | filterName: key: val }}` in the generated .liquid output.
+ *
+ * At runtime (browser, tests, Storybook): returns the value unchanged —
+ * the filter only applies in compiled Liquid.
+ *
+ * Supports chaining: `filter(filter(price, 'money'), 'strip_html')`
+ * → `{{ price | money | strip_html }}`
+ *
+ * @param value       - The value to filter (loop var, tap-mapped var, or nested filter())
+ * @param _filterName - Liquid filter name, e.g. 'image_url', 'money'
+ * @param _args       - Optional key-value arguments for the filter
+ */
+export function filter<T>(value: T, _filterName: string, _args?: Record<string, unknown>): T {
+  return value;
+}
+
+/**
  * Injects a raw Liquid expression or tag directly into the compiled .liquid output.
  *
  * At build time: the compiler passes the liquidStr through unchanged into the

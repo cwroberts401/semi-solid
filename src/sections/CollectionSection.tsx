@@ -27,7 +27,7 @@
  */
 
 import { For } from 'solid-js';
-import { tap, blockAttrs, liquidRaw } from '$lib/runtime';
+import { tap, blockAttrs, filter } from '$lib/runtime';
 
 interface CollectionProduct {
   title: string;
@@ -120,7 +120,7 @@ export default function CollectionSection(props: {
                       <a href={product.url} class="group block">
                         <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
                           <img
-                            src={liquidRaw("{{ product.images.first | image_url: width: 600 }}")}
+                            src={filter(product.images.first, 'image_url', { width: 600 })}
                             alt={product.featured_image.alt}
                             loading="lazy"
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform"

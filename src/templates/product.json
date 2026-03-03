@@ -1,11 +1,18 @@
 {
   "sections": {
-    "main": {
-      "type": "product-section"
+    "gallery": { "type": "product-image-gallery" },
+    "details": {
+      "type": "product-details",
+      "blocks": {
+        "title": { "type": "title" },
+        "price": { "type": "price" },
+        "description": { "type": "description" },
+        "variant_picker": { "type": "variant_picker" },
+        "buy_buttons": { "type": "buy_buttons" }
+      },
+      "block_order": ["title", "price", "description", "variant_picker", "buy_buttons"]
     },
-    "recently-viewed": {
-      "type": "recently-viewed"
-    }
+    "recently-viewed": { "type": "recently-viewed" }
   },
-  "order": ["main", "recently-viewed"]
+  "order": ["gallery", "details", "recently-viewed"]
 }

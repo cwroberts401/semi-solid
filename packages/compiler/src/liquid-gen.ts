@@ -816,6 +816,58 @@ function exprToLiquid(expr: AstNode, ctx: RenderContext): string | null {
     }
   }
 
+  // filter(expr, 'filterName', { key: val }) → {{ expr | filterName: key: val }}
+  if (
+    isCallExpression(expr) &&
+    isIdentifier(expr.callee) &&
+    (expr.callee as AstNode & { name: string }).name === 'filter' &&
+    expr.arguments.length >= 2
+  ) {
+    const innerExpr = expr.arguments[0] as AstNode;
+    const filterNameArg = expr.arguments[1] as AstNode;
+
+    if (isStringLiteral(filterNameArg)) {
+      const innerLiquid = exprToLiquid(innerExpr, ctx);
+      if (innerLiquid) {
+        const barePath = stripLiquidBraces(innerLiquid);
+        const filterName = (filterNameArg as AstNode & { value: string }).value;
+
+        // Build filter argument pairs from optional third ObjectExpression arg
+        let argStr = '';
+        if (expr.arguments.length >= 3) {
+          const argsObj = expr.arguments[2] as AstNode;
+          if (argsObj.type === 'ObjectExpression' && Array.isArray(argsObj.properties)) {
+            const pairs = (argsObj.properties as AstNode[])
+              .filter((p) => p.type === 'ObjectProperty' || p.type === 'Property')
+              .map((p) => {
+                const key = isIdentifier(p.key)
+                  ? (p.key as AstNode & { name: string }).name
+                  : isStringLiteral(p.key)
+                    ? (p.key as AstNode & { value: string }).value
+                    : null;
+                if (!key) return null;
+                const val = p.value as AstNode;
+                // Literal with numeric value (oxc ESTree compat)
+                if (val.type === 'Literal' && typeof val.value === 'number') {
+                  return `${key}: ${val.value}`;
+                }
+                if (isStringLiteral(val)) {
+                  return `${key}: '${(val as AstNode & { value: string }).value}'`;
+                }
+                return null;
+              })
+              .filter(Boolean);
+            if (pairs.length > 0) {
+              argStr = ': ' + pairs.join(', ');
+            }
+          }
+        }
+
+        return `{{ ${barePath} | ${filterName}${argStr} }}`;
+      }
+    }
+  }
+
   // Everything else (signals, complex expressions) — client-side only
   return null;
 }

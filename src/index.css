@@ -6,4 +6,14 @@
  * for things that Tailwind utilities don't cover.
  */
 
-/* Add global overrides here as needed */
+/* Product page: side-by-side gallery + details on desktop */
+@media (min-width: 768px) {
+  main:has(.section-product-image-gallery) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+  main:has(.section-product-image-gallery) > :last-child {
+    grid-column: 1 / -1;
+  }
+}

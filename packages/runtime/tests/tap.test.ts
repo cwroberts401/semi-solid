@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tap, tapRemote, tapPersonalized } from '../src/tap';
+import { tap, tapRemote, tapPersonalized, filter } from '../src/tap';
 import { t, setTranslations } from '../src/t';
 
 describe('tap()', () => {
@@ -68,6 +68,21 @@ describe('tapPersonalized()', () => {
     const result = tapPersonalized('/api/test', {}, 'default');
     expect(result()).toBe('default');
     expect(result()).toBe('default');
+  });
+});
+
+describe('filter()', () => {
+  it('returns value unchanged', () => {
+    expect(filter('hello', 'upcase')).toBe('hello');
+  });
+
+  it('returns value unchanged with args', () => {
+    expect(filter('/image.jpg', 'image_url', { width: 800 })).toBe('/image.jpg');
+  });
+
+  it('preserves type through chaining', () => {
+    const result = filter(filter(42, 'money'), 'strip_html');
+    expect(result).toBe(42);
   });
 });
 

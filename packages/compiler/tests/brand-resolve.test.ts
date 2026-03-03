@@ -241,9 +241,9 @@ describe('createBrandResolver() plugin', () => {
     const plugin = createBrandResolver('brand-a', projectRoot);
     const resolveId = plugin.resolveId as (source: string) => string | null;
 
-    const result = resolveId('$sections/ProductSection');
+    const result = resolveId('$sections/ProductDetails');
     expect(result).not.toBeNull();
-    expect(result).toContain('ProductSection');
+    expect(result).toContain('ProductDetails');
   });
 
   it('resolves $blocks/ paths', () => {

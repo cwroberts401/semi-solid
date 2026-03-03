@@ -37,8 +37,8 @@ interface CartData {
   items: CartItem[];
 }
 
-export default function MiniCart(props: { itemCount?: number }) {
-  const ssrItemCount = tap('{{ cart.item_count }}', props.itemCount ?? 0);
+export default function MiniCart(props: { ssrItemCount?: number }) {
+  const ssrItemCount = tap('{{ cart.item_count }}', props.ssrItemCount ?? 0);
   const [isOpen, setIsOpen] = createSignal(false);
   const [cart, setCart] = createSignal<CartData | null>(null);
   const [loading, setLoading] = createSignal(false);
