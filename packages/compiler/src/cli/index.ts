@@ -3,6 +3,7 @@ import { buildCommand } from './commands/build.js';
 import { buildAllCommand } from './commands/build-all.js';
 import { devCommand } from './commands/dev.js';
 import { backfillCommand } from './commands/backfill.js';
+import { initCommand } from './commands/init.js';
 
 const main = defineCommand({
   meta: {
@@ -14,6 +15,7 @@ const main = defineCommand({
     'build-all': buildAllCommand,
     dev: devCommand,
     backfill: backfillCommand,
+    init: initCommand,
   },
 });
 
