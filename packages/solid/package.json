@@ -1,6 +1,6 @@
 {
   "name": "@semi-solid/solid",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,9 +9,36 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n.d.ts",
+      "import": "./dist/i18n.js"
+    },
+    "./store": {
+      "types": "./dist/store.d.ts",
+      "import": "./dist/store.js"
+    },
+    "./tapWhen": {
+      "types": "./dist/tapWhen.d.ts",
+      "import": "./dist/tapWhen.js"
+    },
+    "./tapRemote": {
+      "types": "./dist/tapRemote.d.ts",
+      "import": "./dist/tapRemote.js"
+    },
+    "./tapPersonalized": {
+      "types": "./dist/tapPersonalized.d.ts",
+      "import": "./dist/tapPersonalized.js"
     }
   },
-  "files": ["dist", "LICENSE"],
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "prepublishOnly": "cp ../../LICENSE .",
