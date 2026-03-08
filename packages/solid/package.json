@@ -14,7 +14,7 @@
   "files": ["dist", "LICENSE"],
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "cp ../../LICENSE . && npm run build",
+    "prepublishOnly": "cp ../../LICENSE .",
     "test": "vitest run",
     "test:watch": "vitest"
   },

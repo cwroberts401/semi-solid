@@ -7,114 +7,47 @@ on:
     branches: [main]
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # 1. Run the test suite
-  # ---------------------------------------------------------------------------
   test:
     name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      - uses: dagger/dagger-for-github@v8
         with:
-          bun-version: latest
+          verb: call
+          args: test
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Run tests
-        run: bun run test
-
-  # ---------------------------------------------------------------------------
-  # 2. Build all brand × locale combinations in parallel
-  # ---------------------------------------------------------------------------
   build:
-    name: Build ${{ matrix.brand }}/${{ matrix.locale }}
+    name: Build all themes
     runs-on: ubuntu-latest
     needs: test
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - brand: brand-a
-            locale: en
-          - brand: brand-a
-            locale: fr
-          - brand: brand-b
-            locale: en
-          - brand: brand-b
-            locale: de
-
     steps:
       - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      - uses: dagger/dagger-for-github@v8
         with:
-          bun-version: latest
+          verb: call
+          args: build-all-themes
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build ${{ matrix.brand }}/${{ matrix.locale }}
-        run: BRAND=${{ matrix.brand }} LOCALE=${{ matrix.locale }} bun run build
-        env:
-          NODE_ENV: production
-
-      - name: Upload theme artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: theme-${{ matrix.brand }}-${{ matrix.locale }}
-          path: dist/${{ matrix.brand }}/${{ matrix.locale }}/
-          retention-days: 7
-
-  # ---------------------------------------------------------------------------
-  # 3. Deploy to staging themes (main branch only)
-  # ---------------------------------------------------------------------------
   deploy-staging:
-    name: Deploy ${{ matrix.brand }}/${{ matrix.locale }} to staging
+    name: Deploy staging
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - brand: brand-a
-            locale: en
-            store: brand-a-staging.myshopify.com
-            theme_id_secret: SHOPIFY_THEME_ID_BRAND_A_EN
-          - brand: brand-a
-            locale: fr
-            store: brand-a-fr-staging.myshopify.com
-            theme_id_secret: SHOPIFY_THEME_ID_BRAND_A_FR
-          - brand: brand-b
-            locale: en
-            store: brand-b-staging.myshopify.com
-            theme_id_secret: SHOPIFY_THEME_ID_BRAND_B_EN
-          - brand: brand-b
-            locale: de
-            store: brand-b-de-staging.myshopify.com
-            theme_id_secret: SHOPIFY_THEME_ID_BRAND_B_DE
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download theme artifact
-        uses: actions/download-artifact@v4
+      - uses: dagger/dagger-for-github@v8
         with:
-          name: theme-${{ matrix.brand }}-${{ matrix.locale }}
-          path: dist/${{ matrix.brand }}/${{ matrix.locale }}/
-
-      - name: Set up Shopify CLI
-        run: npm install -g @shopify/cli @shopify/theme
-
-      - name: Deploy to ${{ matrix.store }}
-        run: |
-          shopify theme push \
-            --path ./dist/${{ matrix.brand }}/${{ matrix.locale }} \
-            --store ${{ matrix.store }} \
-            --theme ${{ secrets[matrix.theme_id_secret] }} \
-            --allow-live
+          verb: call
+          args: >-
+            deploy-staging-all
+            --brand-a-en-store=${{ vars.BRAND_A_EN_STORE }}
+            --brand-a-fr-store=${{ vars.BRAND_A_FR_STORE }}
+            --brand-b-en-store=${{ vars.BRAND_B_EN_STORE }}
+            --brand-b-de-store=${{ vars.BRAND_B_DE_STORE }}
+            --brand-a-en-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_A_EN }}
+            --brand-a-fr-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_A_FR }}
+            --brand-b-en-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_B_EN }}
+            --brand-b-de-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_B_DE }}
+            --shopify-token=env:SHOPIFY_PARTNERS_TOKEN
         env:
-          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
+          SHOPIFY_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}

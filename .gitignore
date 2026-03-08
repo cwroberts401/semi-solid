@@ -10,3 +10,4 @@ semi-solid.config.ts
 .storybook/
 .github/
 packages/*/LICENSE
+.dagger/sdk/

@@ -1,6 +1,6 @@
 {
   "name": "@semi-solid/compiler",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "cp ../../LICENSE . && npm run build",
+    "prepublishOnly": "cp ../../LICENSE .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
