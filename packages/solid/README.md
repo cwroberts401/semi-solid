@@ -5,7 +5,7 @@ SolidJS runtime layer for Semi-Solid. Sits between the zero-dependency stubs in 
 ## Install
 
 ```bash
-bun add @semi-solid/solid
+pnpm add @semi-solid/solid
 ```
 
 `solid-js ^1.9.0` is a peer dependency — install it alongside this package.
@@ -71,8 +71,8 @@ The compiler emits `$lib/runtime` and `$lib/tapWhen` imports in the transformed 
 
 ```bash
 # Run tests
-bun run test
+pnpm test
 
 # Watch mode
-bun run test:watch
+pnpm test:watch
 ```
