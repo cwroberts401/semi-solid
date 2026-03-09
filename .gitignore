@@ -9,6 +9,5 @@ storybook-static
 semi-solid.config.ts
 /src/
 .storybook/
-.github/
 packages/*/LICENSE
 .dagger/sdk/
