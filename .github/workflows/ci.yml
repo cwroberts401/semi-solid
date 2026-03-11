@@ -16,38 +16,3 @@ jobs:
         with:
           verb: call
           args: test
-
-  build:
-    name: Build all themes
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dagger/dagger-for-github@v8.4.0
-        with:
-          verb: call
-          args: build-all-themes
-
-  deploy-staging:
-    name: Deploy staging
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dagger/dagger-for-github@v8.4.0
-        with:
-          verb: call
-          args: >-
-            deploy-staging-all
-            --brand-a-en-store=${{ vars.BRAND_A_EN_STORE }}
-            --brand-a-fr-store=${{ vars.BRAND_A_FR_STORE }}
-            --brand-b-en-store=${{ vars.BRAND_B_EN_STORE }}
-            --brand-b-de-store=${{ vars.BRAND_B_DE_STORE }}
-            --brand-a-en-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_A_EN }}
-            --brand-a-fr-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_A_FR }}
-            --brand-b-en-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_B_EN }}
-            --brand-b-de-theme-id=${{ secrets.SHOPIFY_THEME_ID_BRAND_B_DE }}
-            --shopify-token=env:SHOPIFY_PARTNERS_TOKEN
-        env:
-          SHOPIFY_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}

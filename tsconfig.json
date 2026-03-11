@@ -10,11 +10,9 @@
     "jsxImportSource": "solid-js",
     "skipLibCheck": true,
     "paths": {
-      "$lib/*": ["./packages/solid/src/*"],
-      "$components/*": ["./src/components/*"],
-      "$brand/*": ["./src/brands/brand-a/*"]
+      "$lib/*": ["./packages/solid/src/*"]
     }
   },
-  "include": ["src/**/*", "vite.config.ts"],
+  "include": ["packages/*/src/**/*", "packages/*/tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -3,11 +3,7 @@ dist/
 .DS_Store
 .env
 
-*storybook.log
-storybook-static
-
 semi-solid.config.ts
 /src/
-.storybook/
 packages/*/LICENSE
 .dagger/sdk/
