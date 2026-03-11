@@ -384,6 +384,33 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
         return lines.join('\n') + '\n';
       }
 
+      // -----------------------------------------------------------------
+      // Tailwind v4 auto-detects content files across the project,
+      // including the output directory. Each build writes JS assets
+      // there, Tailwind sees the mtime change, invalidates the CSS,
+      // and triggers another build — infinite loop. Injecting
+      // @source not in the load hook (which runs before ALL transform
+      // hooks) ensures Tailwind's transform sees the exclusion.
+      // -----------------------------------------------------------------
+      if (id.endsWith('.css')) {
+        try {
+          const code = fs.readFileSync(id, 'utf-8');
+          if (/@import\s+['"]tailwindcss['"]/.test(code)) {
+            const cssDir = path.dirname(id);
+            const relDist = path.relative(cssDir, resolvedOutDir).split(path.sep).join('/');
+            const sourceNot = `@source not "${relDist}";`;
+            if (!code.includes(sourceNot)) {
+              return code.replace(
+                /(@import\s+['"]tailwindcss['"]\s*;?)/,
+                `$1\n${sourceNot}`,
+              );
+            }
+          }
+        } catch {
+          // ignore read errors — fall through to default loading
+        }
+      }
+
       if (id !== virtualLocaleIds.internal) return null;
       const localePath = resolveActiveLocalePath(brand, locale, projectRoot);
       if (localePath) {
@@ -392,6 +419,7 @@ export function semiSolidPlugin(options: SemiSolidOptions): Plugin {
       }
       return 'export default {};';
     },
+
 
     // -------------------------------------------------------------------------
     // Capture CSS assets emitted by Vite/Tailwind so buildEnd can reference

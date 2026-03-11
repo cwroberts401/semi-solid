@@ -1,6 +1,7 @@
 {
   "name": "semi-solid",
   "private": true,
+  "packageManager": "pnpm@10.26.2",
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",
